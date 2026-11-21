@@ -8,50 +8,84 @@ En hjemmelaget hundesporer med to ESP32-baserte enheter: en sender på hunden og
 
 | Del | Antall | Bruk |
 |---|---:|---|
-| Heltec Wireless Stick Lite V3, 868 MHz (ESP32-S3 og SX1262) | 2 | Sender og mottaker |
-| ATGM336H GPS-modul med antenne | 2 | Posisjon på begge enheter |
-| 868 MHz antenne med riktig adapter/kabel til kortet | 2 | LoRa |
-| 1,8" ST7735S SPI TFT, 128 × 160 | 1 | Mottaker |
-| 3,7 V LiPo-batteri med passende kontakt | 2 | Strøm |
-| Ledninger, eventuelle brytere og kabinetter | Etter behov | Montering |
+| Heltec Wireless Stick Lite V3 (ESP32-S3 og SX1262), bestilt variant oppgitt som 863–928 MHz | 2 | Sender og mottaker; koden bruker 869,525 MHz |
+| GPS/BDS-modul markedsført som ATGM336H-erstatning, med antenne | 2 | Posisjon på begge enheter; verifiser modulens UART og pinout |
+| 868 MHz SMA-hannantenne | 2 | LoRa; eventuell adapter til Heltec-kortet må passe kortets RF-kontakt |
+| 1,8" ST7735S SPI TFT, 128 × 160, oppgitt 3,3 V | 2 | Én brukes på mottakeren; én ekstra |
+| 3,7 V 3000 mAh LiPo-batteri, oppgitt med PH2.0-kontakt | 3 | To aktuelle enheter og ett ekstra; kontaktkompatibilitet med Heltec må bekreftes |
+| 40-leder flatkabel, 1,27 mm deling | 2 m | Ledningsmateriale; krever passende terminering/adapter |
+| Vanntett USB-C panelkontakt, 2 ledere | 10 | Ekstern strømtilkobling i kabinett; kobling må verifiseres før bruk |
+| 2-pols vippebryter | 5 | Mulig av/på-bryter; DC-egnethet må verifiseres |
+| M3 varmeinnsatser i messing | 420 stk. | Mekanisk montering i kabinettene, ikke elektrisk kobling |
+| Skruer, valgt variant BT2 | 1 sett | Mekanisk montering; kontroller dimensjon og lengde mot kabinettet |
+| Ledninger og kabinetter | Etter behov | Montering |
 
 Et BNO055-kompass er **ikke i bruk** i denne versjonen. STEP-filer til kabinettene legges til senere.
 
 ## Kobling
 
-Koble fra strømmen mens du kobler. GPIO-numrene under er ESP32-numre, ikke nødvendigvis fysiske pinnumre. Sjekk pinout for akkurat din kortversjon.
+Koble fra USB og batteri før du kobler ledninger. Det er to separate Heltec Wireless Stick Lite V3-kort: ett for senderen og ett for mottakeren. `GPIO17`, `GPIO18` osv. nedenfor er ESP32-GPIO-numre som brukes av programkoden, ikke fysiske pinnumre eller en rekkefølge på kortets kontakter. Finn den tilsvarende GPIO-merkede loddeputen/pinnen i pinout for akkurat din kortrevisjon; ikke bruk plasseringen i en pinne- eller headerrekke som identifikasjon.
 
-### GPS på begge enheter
+### GPS på senderen (TX)
 
-| GPS | Heltec |
+Koble GPS-modulen til Heltec-kortet som kjører `tx/tx.ino`:
+
+| Pinne på GPS-modulen | Tilkobling på senderens Heltec |
 |---|---|
-| VCC | 3,3 V, dersom GPS-breakoutet støtter 3,3 V |
+| TXD | GPIO18 (GPS-data inn til ESP32) |
+| RXD | GPIO17 (GPS-data ut fra ESP32) |
 | GND | GND |
-| TXD | GPIO18 |
-| RXD | GPIO17 |
+| VCC | 3V3 bare dersom GPS-modulens dokumentasjon bekrefter at denne inngangen støtter 3,3 V. Hvis den krever en annen forsyning eller pinnen er merket VIN, avklar dette før tilkobling. |
 
-GPS bruker 9600 baud. Kontroller spenningskravene for ditt GPS-kort før tilkobling. På dette oppsettet ga 5 V-pinnen ikke strøm til GPS når kortet gikk på batteri; test derfor at GPS faktisk er strømforsynt både på USB og batteri.
+### GPS på mottakeren (RX)
 
-### Skjerm på mottakeren
+Koble den andre GPS-modulen til Heltec-kortet som kjører `rx/rx.ino`:
 
-| ST7735S | Heltec |
+| Pinne på GPS-modulen | Tilkobling på mottakerens Heltec |
+|---|---|
+| TXD | GPIO18 (GPS-data inn til ESP32) |
+| RXD | GPIO17 (GPS-data ut fra ESP32) |
+| GND | GND |
+| VCC | 3V3 bare dersom GPS-modulens dokumentasjon bekrefter at denne inngangen støtter 3,3 V. Hvis den krever en annen forsyning eller pinnen er merket VIN, avklar dette før tilkobling. |
+
+På begge enheter krysser UART-dataretningene: GPS `TXD` går til Heltec `GPIO18`, og GPS `RXD` går til Heltec `GPIO17`. Dette er de GPIO-numrene skissene setter opp for 9600 baud. Den bestilte modulen er markedsført som en ATGM336H-erstatning; produktteksten alene bekrefter ikke modulens eksakte pinout, forsyningsspenning, UART-logikknivå eller standard baudrate. Kontroller dette mot dokumentasjonen/merkingen på modulen før tilkobling, og ikke anta at ulike GPS-breakout-kort har samme regulator eller pinnemerking. I dette oppsettet ga Heltec-kortets 5V-pinne ikke strøm til GPS når kortet gikk på batteri. Verifiser derfor GPS-strøm og funksjon både på USB og batteri før bruk.
+
+### TFT-skjerm på mottakeren
+
+Koble skjermen bare til mottakerens Heltec-kort. `SCL` og `SDA` er navn skjermen kan bruke for SPI-klokke og SPI-data; de betyr ikke at denne koblingen bruker I²C.
+
+| Pinne på ST7735S-skjermen | Tilkobling på mottakerens Heltec |
 |---|---|
 | GND | GND |
-| VCC / VDC | 3,3 V |
-| SCL / SCK | GPIO47 |
-| SDA / MOSI | GPIO35 |
-| RES / RST | GPIO38 |
-| DC | GPIO48 |
-| CS | GPIO36 |
-| BLK | GPIO26 |
+| VCC / VDC | Heltec 3V3 (den bestilte modulen er oppgitt som 3,3 V; kontroller merkingen på modulen) |
+| SCL / SCK | GPIO47 (SPI-klokke) |
+| SDA / MOSI | GPIO35 (SPI-data fra Heltec til skjerm) |
+| RES / RST | GPIO38 (reset) |
+| DC | GPIO48 (data/kommando) |
+| CS | GPIO36 (chip select) |
+| BLK | GPIO26 (baklys-styring; kontroller at skjermens BLK-inngang tåler GPIO-signalnivået) |
 
-SCL og SDA på denne skjermen er SPI-signaler, ikke I²C. Sjekk at skjermens baklys og strømtilkobling er kompatible med 3,3 V og kortet ditt. `display_test` kan brukes for å sjekke skjermen før hele mottakeren lastes opp.
+GPIO-numrene for skjermen kommer fra `rx/rx.ino` og `display_test/display_test.ino`. Sjekk skjermens pinnebetegnelser, forsyningskrav og signalnivåer før du kobler til; skjermvarianter kan ha ulike kontakter og strømkrav. `display_test` kan brukes for å sjekke skjermen før hele mottakeren lastes opp.
 
-LoRa-radioen er innebygd og bruker GPIO8–14 ifølge koden; den trenger ingen ekstern SPI-kobling. Fest antennene før du slår på og sender.
+### Antenner
+
+- Hvert Heltec-kort har innebygd LoRa-radio. Koden bruker GPIO8–14 internt til radioen; disse signalene skal ikke kobles til en ekstern GPS eller skjerm.
+- De bestilte LoRa-antennene er oppgitt som 868 MHz med SMA-hannkontakt. Koble hver antenne til sitt Heltec-kort bare med en adapter som passer kortets RF-kontakt og er beregnet for antennen. Ikke tving sammen kontakter som ikke passer; fest antennen før du slår på radioen eller sender.
+- Koble GPS-antennen til GPS-modulens egen antennekontakt, hvis modulen bruker en separat antenne. GPS-antennen kobles ikke til Heltec-kortets LoRa-antennekontakt.
 
 ### Batteri
 
-Bruk et egnet **encellet** LiPo-batteri og kontroller kontakt, polaritet og kortets ladekrets før tilkobling. En bryter kan settes i batteriets plussledning; da kan batteriet normalt bare lades når bryteren er på. Unngå kortslutning og bruk egnet batteribeskyttelse.
+Hvert Heltec-kort har sitt eget batteri; sender og mottaker deler ikke batteri. De bestilte cellene er oppgitt som encellede 3,7 V 3000 mAh LiPo med PH2.0-kontakt. Dette bekrefter ikke at kontakten passer Heltec-kortet eller at polariteten er lik. Bruk dem bare dersom kortets batteriinngang og batteridokumentasjon bekrefter kompatibilitet. Koble batteriet bare til batteriinngangen som er identifisert i dokumentasjonen og merkingen for akkurat kortrevisjon; repoet angir ikke fysisk kontakt eller pinneplassering. Kontroller kontakt og polaritet før tilkobling. Ikke koble batteriet til GPIO-pinner eller anta at en vilkårlig 3V3-/5V-pin er batteriinngang.
+
+Programmet leser kortets innebygde batterimålekrets: GPIO1 måler spenningsdeleren, og GPIO37 styrer målingen. Dette er interne målesignaler, ikke ekstra batteriledninger. Kontroller kortets kontakt, polaritet og ladekrets før tilkobling. Unngå kortslutning, bruk egnet batteribeskyttelse, og ikke lad et batteri uten å ha bekreftet at kortets ladekrets er beregnet for det. En bryter i batteriets plussledning kan påvirke ladingen; kontroller dette for den konkrete koblingen.
+
+### Panelmontert USB-C-kontakt og bryter
+
+Den bestilte panelkontakten er oppgitt som USB-C med **to ledere**. To ledere gir ikke USB-data, så kontakten kan ikke brukes til å programmere kortet. Produktteksten alene dokumenterer ikke ledernes polaritet, eventuell USB-C-konfigurasjon eller at kontakten kan brukes som ladeinngang til Heltec-kortet.
+
+Ikke koble panelkontakten direkte til batteriet, GPIO-pinner eller 5V-pinnen før kontakten og kortets inngang er identifisert og dokumentert. Bruk Heltecs innebygde USB-C-kontakt til programmering. En ekstern 2-lederkontakt kan først kobles til strøm etter at du har bekreftet hvilken leder som er pluss/minus, hvilken spenning den leverer, og at kortets valgte inngang støtter dette. Ikke bruk den som batterilader uten å bekrefte at ladebanen er beregnet for det.
+
+Vippebryterne kan eventuelt brukes som av/på-brytere, men produkttekstens strømrating alene bekrefter ikke at den aktuelle bryteren er egnet for LiPo-likestrøm. Kontroller DC-rating og polaritet før den eventuelt settes i serie med batteriets plussledning. Inntil dette er bekreftet, skal hverken USB-C-panelkontakten eller bryteren regnes som en ferdig koblingsanvisning.
 
 ## Programvare og opplasting
 
