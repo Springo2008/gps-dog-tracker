@@ -20,7 +20,7 @@ En hjemmelaget hundesporer med to ESP32-baserte enheter: en sender på hunden og
 | Skruer, valgt variant BT2 | 1 sett | Mekanisk montering; kontroller dimensjon og lengde mot kabinettet |
 | Ledninger og kabinetter | Etter behov | Montering |
 
-Et BNO055-kompass er **ikke i bruk** i denne versjonen. STEP-filer til kabinettene legges til senere.
+Et BNO055-kompass er **ikke i bruk** i denne versjonen. STEP-filer til kabinettene ligger i `cad/`.
 
 ## Kobling
 
