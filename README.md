@@ -2,7 +2,7 @@
 
 En hjemmelaget hundesporer med to ESP32-baserte enheter: en sender på hunden og en håndholdt mottaker med skjerm. Senderen henter posisjon fra GPS og sender den direkte til mottakeren via LoRa, uten mobilnett.
 
-**Prosjektet er en prototype.** Ikke stol på det som eneste måte å finne hunden på. Test GPS, rekkevidde, strømforsyning og batteritid grundig før bruk. Nyeste programvare er kompilert, men ikke fullstendig testet på maskinvaren.
+**Prosjektet er en prototype.** Ikke stol på det som eneste måte å finne hunden på. Test GPS, rekkevidde, strømforsyning og batteritid grundig før bruk. Programvaren er ikke fullstendig testet på maskinvaren.
 
 ## Deler
 
